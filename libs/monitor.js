@@ -8,6 +8,7 @@ const request = require('request');
  * @param {string} namespace
  * @param {string} metricName
  * @param {string} unit
+ * @param {string|Array} dimensions
  * @constructor
  */
 function Monitor(namespace, metricName, unit, dimensions) {
@@ -52,7 +53,7 @@ Monitor.prototype.report = function (metrics, callback) {
         if (metric.timestamp) {
             data.timestamp = metric.timestamp.toString();
         } else {
-            data.timestamp = new Date().getTime();
+            data.timestamp = new Date().getTime().toString();
         }
         data.metricName = this._metricName;
         data.unit = this._unit;
