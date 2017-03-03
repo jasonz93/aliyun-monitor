@@ -15,9 +15,9 @@ function Monitor(namespace, metricName, unit, dimensions) {
     this._metricName = metricName;
     this._unit = unit;
     if (typeof dimensions === 'string') {
-        this._dimensions = [fields];
+        this._dimensions = [dimensions];
     } else if (dimensions instanceof Array) {
-        this._dimensions = fields;
+        this._dimensions = dimensions;
     }
     let nsParts = namespace.split('/');
     if (nsParts.length === 3) {
