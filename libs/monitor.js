@@ -5,8 +5,6 @@ const request = require('request');
 const util = require('util');
 const events = require('events');
 const _ = require('lodash');
-const FakeAvg = require('./metrics/fakeavg');
-const TotalMetric = require('./metrics/total');
 
 /**
  *
@@ -180,21 +178,5 @@ Monitor.prototype.batchReport = function (metrics) {
         this._batch = [];
     }
 };
-
-/**
- *
- * @returns {TotalMetric}
- */
-Monitor.prototype.createTotalMetric = function () {
-    return new TotalMetric(this, this._batchInterval);
-}
-
-/**
- *
- * @returns {FakeAvg}
- */
-Monitor.prototype.createFakeAvgMetric = function () {
-    return new FakeAvg(this, this._batchInterval);
-}
 
 module.exports = Monitor;

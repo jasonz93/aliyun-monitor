@@ -1,6 +1,6 @@
 {
   "name": "aliyun-monitor",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Non official SDK for Aliyun Cloud Monitor Service",
   "main": "index.js",
   "scripts": {
