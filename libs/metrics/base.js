@@ -64,17 +64,17 @@ BaseMetric.prototype.report = function (value, dimensions, callback) {
     Object.getOwnPropertyNames(dimensions).sort().forEach((key) => {
         groupKey += dimensions[key] + '_';
     });
+    let timestamp = new Date().getTime();
     let data = this._datas[groupKey];
     if (!data) {
-        this._datas[groupKey] = data = _.extend(dimensions, {
+        this._datas[groupKey] = data = _.extend(_.cloneDeep(dimensions), {
             _value: 0,
             _count: 0,
-            _lastReport: 0
+            _lastReport: timestamp
         });
     }
     data._value += value;
     data._count ++;
-    let timestamp = new Date().getTime();
     if (timestamp - data._lastReport >= this._interval) {
         data._lastReport = timestamp;
         data = this.calculate(data);

@@ -27,7 +27,6 @@ describe('Test metrics', () => {
             done();
         };
         monitor.on('error', onError);
-        metric.report(0, dimensions);
         monitor.on('report', onReport);
         mock.forEach((val) => {
             total += val;
@@ -39,6 +38,28 @@ describe('Test metrics', () => {
     });
 
     it('Test fake avg metric', (done) => {
-
+        let metric = monitor.createFakeAvgMetric();
+        let total = 0;
+        let dimensions = {
+            hostname: os.hostname()
+        };
+        let onError = (err) => {
+            done(err);
+        };
+        monitor.on('error', onError);
+        mock.forEach((val) => {
+            total += val;
+            metric.report(val, dimensions);
+        });
+        let onReport = (payload) => {
+            expect(payload.length).to.be.equal(1);
+            expect(payload[0].value).to.be.equal(total / mock.length + 1);
+            monitor.removeAllListeners();
+            done();
+        };
+        monitor.on('report', onReport);
+        setTimeout(() => {
+            metric.report(0, dimensions);
+        }, 1100);
     })
 });
