@@ -4,6 +4,9 @@
 const request = require('request');
 const util = require('util');
 const events = require('events');
+const _ = require('lodash');
+const FakeAvg = require('./metrics/fakeavg');
+const TotalMetric = require('./metrics/total');
 
 /**
  *
@@ -78,36 +81,38 @@ Monitor.prototype.report = function (metrics, callback) {
         });
         payload.push(data);
     });
-    request('http://open.cms.aliyun.com/metrics/put', {
-        method: 'POST',
-        form: {
-            userId: this._userid,
-            namespace: this._namespace,
-            metrics: JSON.stringify(payload)
-        }
-    }, (err, response, data) => {
-        if (err) {
-            this.emit('error', err);
-            callback(err);
-        } else if (response.statusCode !== 200) {
-            let msg = null;
-            let error;
-            try {
-                msg = JSON.parse(data);
-                error = new Error(msg.msg);
-                error.name = msg.code;
-                callback(error);
-            } catch (e) {
-                error = new Error('Unknown error.');
-                error.data = data;
+    if (payload.length > 0) {
+        request('http://open.cms.aliyun.com/metrics/put', {
+            method: 'POST',
+            form: {
+                userId: this._userid,
+                namespace: this._namespace,
+                metrics: JSON.stringify(payload)
             }
-            this.emit('error', error);
-            callback(error);
-        } else {
-            this.emit('report', payload);
-            callback(null);
-        }
-    })
+        }, (err, response, data) => {
+            if (err) {
+                this.emit('error', err);
+                callback(err);
+            } else if (response.statusCode !== 200) {
+                let msg = null;
+                let error;
+                try {
+                    msg = JSON.parse(data);
+                    error = new Error(msg.msg);
+                    error.name = msg.code;
+                    callback(error);
+                } catch (e) {
+                    error = new Error('Unknown error.');
+                    error.data = data;
+                }
+                this.emit('error', error);
+                callback(error);
+            } else {
+                this.emit('report', payload);
+                callback(null);
+            }
+        })
+    }
 };
 
 /**
@@ -158,6 +163,7 @@ Monitor.prototype.batchReport = function (metrics) {
             throw new Error('Illegal metrics.');
         }
     }
+    metrics = _.cloneDeep(metrics);
     metrics.forEach((metric) => {
         metric.timestamp = new Date().getTime().toString();
     })
@@ -174,5 +180,21 @@ Monitor.prototype.batchReport = function (metrics) {
         this._batch = [];
     }
 };
+
+/**
+ *
+ * @returns {TotalMetric}
+ */
+Monitor.prototype.createTotalMetric = function () {
+    return new TotalMetric(this, this._batchInterval);
+}
+
+/**
+ *
+ * @returns {FakeAvg}
+ */
+Monitor.prototype.createFakeAvgMetric = function () {
+    return new FakeAvg(this, this._batchInterval);
+}
 
 module.exports = Monitor;

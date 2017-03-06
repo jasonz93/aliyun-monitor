@@ -6,6 +6,7 @@ const os = require('os');
 const Monitor = require('../libs/monitor');
 
 describe('Test monitor', () => {
+
     it('Test report a metric', function (done) {
         this.timeout(10000);
         let monitor = new Monitor('ACS/CUSTOM/1121930929925232', 'nodejs_response_time', 'Milliseconds', 'hostname');
