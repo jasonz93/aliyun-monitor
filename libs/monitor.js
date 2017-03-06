@@ -158,6 +158,9 @@ Monitor.prototype.batchReport = function (metrics) {
             throw new Error('Illegal metrics.');
         }
     }
+    metrics.forEach((metric) => {
+        metric.timestamp = new Date().getTime().toString();
+    })
     this._batch.push(metrics);
     if (this._batch.length >= this._batchCount) {
         let batch = this._batch;
