@@ -130,7 +130,7 @@ Monitor.prototype.startBatch = function (batchCount, batchInterval) {
         let batch = this._batch;
         this.report(batch, (err) => {
             if (err) {
-                this._batch.push(batch);
+                this._batch.push(...batch);
                 //TODO: Log warn
             }
             //TODO: Log info
@@ -167,12 +167,12 @@ Monitor.prototype.batchReport = function (metrics) {
     metrics.forEach((metric) => {
         metric.timestamp = new Date().getTime().toString();
     })
-    this._batch.push(metrics);
+    this._batch.push(...metrics);
     if (this._batch.length >= this._batchCount) {
         let batch = this._batch;
         this.report(batch, (err) => {
             if (err) {
-                this._batch.push(batch);
+                this._batch.push(...batch);
                 //TODO: Log warn
             }
             //TODO: Log info
