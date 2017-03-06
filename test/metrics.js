@@ -11,7 +11,9 @@ describe('Test metrics', () => {
         mock.push(Math.random());
     }
 
-    it('Test total metric', (done) => {
+    it('Test total metric', function (done) {
+        this.timeout(10000);
+        monitor.removeAllListeners();
         let metric = monitor.createTotalMetric();
         let total = 0;
         let dimensions = {
@@ -23,7 +25,6 @@ describe('Test metrics', () => {
         let onReport = (payload) => {
             expect(payload.length).to.be.equal(1);
             expect(payload[0].value).to.be.equal(total);
-            monitor.removeAllListeners();
             done();
         };
         monitor.on('error', onError);
@@ -37,7 +38,9 @@ describe('Test metrics', () => {
         }, 1100);
     });
 
-    it('Test fake avg metric', (done) => {
+    it('Test fake avg metric', function (done) {
+        this.timeout(10000);
+        monitor.removeAllListeners();
         let metric = monitor.createFakeAvgMetric();
         let total = 0;
         let dimensions = {
@@ -54,7 +57,6 @@ describe('Test metrics', () => {
         let onReport = (payload) => {
             expect(payload.length).to.be.equal(1);
             expect(payload[0].value).to.be.equal(total / mock.length + 1);
-            monitor.removeAllListeners();
             done();
         };
         monitor.on('report', onReport);
