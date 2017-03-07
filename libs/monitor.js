@@ -5,6 +5,7 @@ const request = require('request');
 const util = require('util');
 const events = require('events');
 const _ = require('lodash');
+const BatchExecutor = require('batch-executor');
 
 /**
  *
@@ -37,8 +38,17 @@ function Monitor(namespace, metricName, unit, dimensions, batchCount, batchInter
     if (!batchInterval) {
         batchInterval = 5000;
     }
-    this._batchCount = batchCount;
-    this._batchInterval = batchInterval;
+    this._executor = new BatchExecutor(batchCount, batchInterval);
+    this._executor.on('error', (err) => {
+        this.emit('error', err);
+    });
+    this._executor.on('execute', (batch, callback) => {
+        this.report(batch, (err) => {
+            if (err) {
+                callback(err);
+            }
+        });
+    })
 }
 
 util.inherits(Monitor, events.EventEmitter);
@@ -114,46 +124,10 @@ Monitor.prototype.report = function (metrics, callback) {
 };
 
 /**
- * Start batch timer
- * @param {int} batchCount Max commit count
- * @param {int} batchInterval Max commit interval in millis
- */
-Monitor.prototype.startBatch = function (batchCount, batchInterval) {
-    if (!this._batch) {
-        this._batch = [];
-    }
-    this._batchCount = batchCount;
-    this._batchInterval = batchInterval;
-    this._batchTimer = setInterval(() => {
-        let batch = this._batch;
-        this.report(batch, (err) => {
-            if (err) {
-                this._batch.push(...batch);
-                //TODO: Log warn
-            }
-            //TODO: Log info
-        });
-        this._batch = [];
-    }, batchInterval);
-};
-
-/**
- * Stop batch timer
- */
-Monitor.prototype.stopBatch = function () {
-    if (this._batchTimer) {
-        clearInterval(this._batchTimer);
-    }
-};
-
-/**
  * Add metrics to batch queue
  * @param {object|Array} metrics
  */
 Monitor.prototype.batchReport = function (metrics) {
-    if (!this._batchTimer) {
-        this.startBatch(this._batchCount, this._batchInterval);
-    }
     if (!(metrics instanceof Array)) {
         if (typeof metrics === 'object') {
             metrics = [metrics];
@@ -164,19 +138,8 @@ Monitor.prototype.batchReport = function (metrics) {
     metrics = _.cloneDeep(metrics);
     metrics.forEach((metric) => {
         metric.timestamp = new Date().getTime().toString();
-    })
-    this._batch.push(...metrics);
-    if (this._batch.length >= this._batchCount) {
-        let batch = this._batch;
-        this.report(batch, (err) => {
-            if (err) {
-                this._batch.push(...batch);
-                //TODO: Log warn
-            }
-            //TODO: Log info
-        });
-        this._batch = [];
-    }
+    });
+    this._executor.batch(metrics);
 };
 
 module.exports = Monitor;
